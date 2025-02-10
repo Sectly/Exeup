@@ -1,3 +1,9 @@
+// @Package: Exeup
+// @License: MIT
+// @Author: Sectly
+// @Version: 0.0.1
+// @Source: https://github.com/Sectly/Exeup
+
 const fs = require('fs').promises;
 const { resolve } = require('path');
 const pngToIco = require('png-to-ico');

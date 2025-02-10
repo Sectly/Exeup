@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 
+// @Package: Exeup CLI
+// @License: MIT
+// @Author: Sectly
+// @Version: 0.0.1
+// @Source: https://github.com/Sectly/Exeup
+
 const fs = require('fs').promises;
 const path = require('path');
 const readline = require('readline');
