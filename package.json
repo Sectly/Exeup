@@ -23,5 +23,12 @@
   "bugs": {
     "url": "https://github.com/Sectly/Exeup/issues"
   },
-  "homepage": "https://github.com/Sectly/Exeup#readme"
+  "homepage": "https://github.com/Sectly/Exeup#readme",
+  "dependencies": {
+    "@vercel/ncc": "^0.38.3",
+    "png-to-ico": "^2.1.8",
+    "postject": "^1.0.0-alpha.6",
+    "resedit": "^2.0.3",
+    "signtool": "^1.0.0"
+  }
 }
