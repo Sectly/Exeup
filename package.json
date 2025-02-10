@@ -1,0 +1,27 @@
+{
+  "name": "exeup",
+  "version": "0.0.1",
+  "description": "Exeup: Pack up and bundle your Node.js project into a single .exe file for easy distribution and hassle-free execution on Windows!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sectly/Exeup.git"
+  },
+  "keywords": [
+    "exe",
+    "build",
+    "binary",
+    "bundle",
+    "executable",
+    "windows"
+  ],
+  "author": "Sectly",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Sectly/Exeup/issues"
+  },
+  "homepage": "https://github.com/Sectly/Exeup#readme"
+}
