@@ -1,7 +1,7 @@
 // @Package: Exeup
 // @License: MIT
 // @Author: Sectly
-// @Version: 0.0.1
+// @Version: 0.0.2
 // @Source: https://github.com/Sectly/Exeup
 
 const fs = require('fs').promises;
@@ -98,6 +98,10 @@ async function exeup(options, progressCallback) {
         progress: 0,
         done: false,
     });
+
+    if (process.platform !== "win32") {
+        throw new Error(`Unsupported platform, Exeup requires the Windows platform (win32) ${process.platform === "linux" && "You may use something like appimagetool to turn the .exe into an .AppImage or use the Wine compatibility layer!" || ""}`);
+    }
 
     const opts = await parseOptions(options);
     const out = opts.out.replace(/\\/g, '/');

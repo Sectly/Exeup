@@ -3,7 +3,7 @@
 // @Package: Exeup CLI
 // @License: MIT
 // @Author: Sectly
-// @Version: 0.0.1
+// @Version: 0.0.2
 // @Source: https://github.com/Sectly/Exeup
 
 const fs = require('fs').promises;
@@ -114,7 +114,7 @@ async function main() {
     program
         .name('exeup')
         .description('Exeup: Pack up and bundle your Node.js project into a single .exe file for easy distribution and hassle-free execution on Windows!')
-        .version('0.0.1')
+        .version('0.0.2')
         .action(async () => {
             let options = await loadConfig();
 
@@ -138,7 +138,7 @@ async function main() {
         .command('version')
         .description('Display version information')
         .action(async () => {
-            console.log("\nExeUp Version: 0.0.1");
+            console.log("ExeUp Version: 0.0.2");
         });
 
     program

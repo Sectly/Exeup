@@ -1,6 +1,6 @@
 {
   "name": "exeup",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Exeup: Pack up and bundle your Node.js project into a single .exe file for easy distribution and hassle-free execution on Windows!",
   "main": "index.js",
   "bin": {
