@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "Exeup: Pack up and bundle your Node.js project into a single .exe file for easy distribution and hassle-free execution on Windows!",
   "main": "index.js",
+  "bin": {
+    "exeup": "cli.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +15,7 @@
   },
   "keywords": [
     "exe",
+    "exeup",
     "build",
     "binary",
     "bundle",
@@ -30,5 +34,8 @@
     "postject": "^1.0.0-alpha.6",
     "resedit": "^2.0.3",
     "signtool": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

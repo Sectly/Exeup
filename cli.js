@@ -11,7 +11,6 @@ const path = require('path');
 const readline = require('readline');
 const { program } = require('commander');
 const exeup = require('./index');
-
 const CONFIG_FILE = 'exeup.config.json';
 
 async function loadConfig() {
@@ -38,13 +37,28 @@ async function promptUser(query) {
     }));
 }
 
-async function setupConfig() {
-    console.log('No configuration file found. Let\'s set one up.');
+async function promptUserYesNo(query) {
+    const userInput = await promptUser(`${query} [Yes(y) / No(n)]`) || 'n';
+
+    if (String(userInput).includes("y")) {
+        return true;
+    }
+
+    return false;
+}
+
+async function setupConfig(asCommand) {
+    if (asCommand) {
+        console.log("Let's configure Exeup.");
+    } else {
+        console.log("No configuration file found. Let's set one up.");
+    }
 
     const entry = await promptUser('Entry file (default: ./index.js): ') || './index.js';
     const out = await promptUser('Output executable file (default: ./build/output.exe): ') || './build/output.exe';
     const version = await promptUser('Application version (default: 1.0.0): ') || '1.0.0';
-    const icon = await promptUser('Icon file (must be .ico, press enter to skip): ');
+    const icon = await promptUser('Icon file (must be .ico or .png, press enter to skip): ');
+    const skipBundle = await promptUserYesNo('Skip the bundling process (yes/no, default: no): ') || false;
     const executionLevel = await promptUser('Execution level (asInvoker/highestAvailable/requireAdministrator, default: asInvoker): ') || 'asInvoker';
 
     const properties = {
@@ -54,7 +68,7 @@ async function setupConfig() {
         OriginalFilename: path.basename(out),
     };
 
-    const config = { entry, out, version, icon, executionLevel, properties };
+    const config = { entry, out, version, icon, skipBundle, executionLevel, properties };
 
     await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2));
 
@@ -63,25 +77,82 @@ async function setupConfig() {
     return config;
 }
 
-async function main() {
+function updateProgress(message, progress) {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+
+    const barLength = 30;
+    const filledLength = Math.round((progress / 100) * barLength);
+    const bar = '█'.repeat(filledLength) + '-'.repeat(barLength - filledLength);
+
+    process.stdout.write(`[${bar}] ${progress}% - ${message}`);
+}
+
+async function doBuild() {
+    console.log('Initializing...');
+
     let options = await loadConfig();
 
     if (!options) {
-        options = await setupConfig();
+        options = await setupConfig(false);
     }
 
+    try {
+        await exeup(options, (progressData) => {
+            updateProgress(progressData.message, progressData.progress);
+
+            if (progressData.done) {
+                console.log('\nExecutable created successfully:', options.out);
+            }
+        });
+    } catch (err) {
+        console.error('\nError:', err.message);
+    }
+}
+
+async function main() {
     program
         .name('exeup')
         .description('Exeup: Pack up and bundle your Node.js project into a single .exe file for easy distribution and hassle-free execution on Windows!')
         .version('0.0.1')
         .action(async () => {
-            try {
-                await exeup(options);
+            let options = await loadConfig();
 
-                console.log('Executable created successfully:', options.out);
-            } catch (err) {
-                console.error('Error:', err.message);
+            const runBuild = options && await promptUserYesNo('Run "exeup build"?') || false;
+
+            if (runBuild) {
+                await doBuild();
+            } else {
+                program.help();
             }
+        });
+
+    program
+        .command('build')
+        .description('Build the executable')
+        .action(async () => {
+            await doBuild();
+        });
+
+    program
+        .command('version')
+        .description('Display version information')
+        .action(async () => {
+            console.log("\nExeUp Version: 0.0.1");
+        });
+
+    program
+        .command('config')
+        .description('Reconfigure the exeup config')
+        .action(async () => {
+            await setupConfig(true);
+        });
+
+    program
+        .command('help')
+        .description('Display help information')
+        .action(async () => {
+            program.help();
         });
 
     program.parse(process.argv);

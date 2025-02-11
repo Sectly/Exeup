@@ -55,6 +55,7 @@ function parseObject(data, reference) {
 
                 break;
             }
+
             case 'object': {
                 if (value && !Array.isArray(value)) data[key] = parseObject(value, reference);
 
@@ -76,30 +77,65 @@ async function parseOptions(options) {
     return options;
 }
 
-// Language code for en-us and encoding codepage for UTF-16
 const language = {
-    lang: 1033,
-    codepage: 1200
+    lang: 1033, // Language: en-us
+    codepage: 1200 // Encoding: UTF-16
 };
 
-async function exe(options) {
+async function ensurePath(targetPath) {
+    const dirPath = path.extname(targetPath) ? path.dirname(targetPath) : targetPath;
+
+    try {
+        await fs.mkdir(dirPath, { recursive: true });
+    } catch (error) {
+        console.error(`Error ensuring directory: ${dirPath}`, error);
+    }
+}
+
+async function exeup(options, progressCallback) {
+    progressCallback({
+        message: "Initializing...",
+        progress: 0,
+        done: false,
+    });
+
     const opts = await parseOptions(options);
     const out = opts.out.replace(/\\/g, '/');
     const bundle = `${out}.bundle.js`;
     const seaConfig = `${out}.sea-config.json`;
     const seaBlob = `${out}.blob`;
 
-    if (opts.icon && String(opts.icon).endsWith(".png")) {
-        pngToIco(opts.icon)
-            .then(buf => {
-                const icoIcon = `${String(opts.icon).replace(".png", ".ico")}`;
-
-                fs.writeFileSync(icoIcon, buf);
-
-                opts.icon = icoIcon;
-            })
-            .catch(console.error);
+    if (!opts.out || !opts.entry) {
+        throw new Error('Out and/or Entry options are missing!');
     }
+
+    await ensurePath(path.normalize(out));
+    await ensurePath(path.normalize(opts.entry));
+
+    if (opts.icon && String(opts.icon).endsWith(".png")) {
+        progressCallback({
+            message: "Converting icon...",
+            progress: 15,
+            done: false,
+        });
+
+        await ensurePath(path.normalize(opts.icon));
+
+        const icoBuffer = await pngToIco(opts.icon);
+        const icoIcon = `${String(opts.icon).replace(".png", ".ico")}`;
+
+        await ensurePath(path.normalize(icoIcon));
+
+        await fs.writeFile(icoIcon, icoBuffer);
+
+        opts.icon = icoIcon;
+    }
+
+    progressCallback({
+        message: "Processing code...",
+        progress: 25,
+        done: false,
+    });
 
     let code = '';
 
@@ -114,6 +150,12 @@ async function exe(options) {
 
         code = output.code;
     }
+
+    progressCallback({
+        message: "Processing executable...",
+        progress: 35,
+        done: false,
+    });
 
     const pattern = /^#!.*\n/;
     const match = code.match(pattern);
@@ -137,11 +179,24 @@ async function exe(options) {
     await signtool(['remove', '/s', `"${out}"`]);
 
     const seaBlobData = await fs.readFile(seaBlob);
+
     await inject(out, 'NODE_SEA_BLOB', Buffer.from(seaBlobData), { sentinelFuse: 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2' });
+
+    progressCallback({
+        message: "Cleaning up...",
+        progress: 50,
+        done: false,
+    });
 
     await fs.unlink(bundle);
     await fs.unlink(seaConfig);
     await fs.unlink(seaBlob);
+
+    progressCallback({
+        message: "Rectifying executable...",
+        progress: 75,
+        done: false,
+    });
 
     const RE = await load();
     const data = await fs.readFile(opts.out);
@@ -165,6 +220,12 @@ async function exe(options) {
 
     vi.outputToResourceEntries(res.entries);
 
+    progressCallback({
+        message: "Finishing up...",
+        progress: 85,
+        done: false,
+    });
+
     if (opts.icon) {
         const iconFile = RE.Data.IconFile.from(await fs.readFile(opts.icon));
 
@@ -178,6 +239,12 @@ async function exe(options) {
     res.outputResource(executable);
 
     await fs.writeFile(opts.out, Buffer.from(executable.generate()));
+
+    progressCallback({
+        message: "Complete!",
+        progress: 100,
+        done: true,
+    });
 }
 
-module.exports = exe;
+module.exports = exeup;

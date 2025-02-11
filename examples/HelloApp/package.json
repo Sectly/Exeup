@@ -1,0 +1,25 @@
+{
+  "name": "helloapp",
+  "version": "1.0.0",
+  "description": "Exeup's Test Application",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sectly/Exeup.git"
+  },
+  "keywords": [
+    "exeup",
+    "exe",
+    "test",
+    "app"
+  ],
+  "author": "Sectly",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Sectly/Exeup/issues"
+  },
+  "homepage": "https://github.com/Sectly/Exeup#readme"
+}
