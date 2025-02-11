@@ -3,7 +3,7 @@
 // @Package: Exeup CLI
 // @License: MIT
 // @Author: Sectly
-// @Version: 0.0.2
+// @Version: 0.0.4
 // @Source: https://github.com/Sectly/Exeup
 
 const fs = require('fs').promises;
@@ -40,7 +40,7 @@ async function promptUser(query) {
 async function promptUserYesNo(query) {
     const userInput = await promptUser(`${query} [Yes(y) / No(n)]`) || 'n';
 
-    if (String(userInput).includes("y")) {
+    if (String(userInput).toLocaleLowerCase().includes("y")) {
         return true;
     }
 
@@ -98,13 +98,21 @@ async function doBuild() {
     }
 
     try {
-        await exeup(options, (progressData) => {
+        const { checksum, metadata } = await exeup(options, (progressData) => {
             updateProgress(progressData.message, progressData.progress);
 
             if (progressData.done) {
                 console.log('\nExecutable created successfully:', options.out);
             }
         });
+
+        if (checksum) {
+            console.log('Executable SHA-256 Checksum:', checksum);
+        }
+
+        if (metadata && metadata.size) {
+            console.log(`Executable is ${Number((metadata.size / 1024 / 1024)).toFixed(2)} MB. ${metadata.size > 250 * 1024 * 1024 ? "(Executable is 250MB or higher you may want to use an .exe compressing tool like: https://upx.github.io/)" : ""}`)
+        }
     } catch (err) {
         console.error('\nError:', err.message);
     }
@@ -114,7 +122,7 @@ async function main() {
     program
         .name('exeup')
         .description('Exeup: Pack up and bundle your Node.js project into a single .exe file for easy distribution and hassle-free execution on Windows!')
-        .version('0.0.2')
+        .version('0.0.4')
         .action(async () => {
             let options = await loadConfig();
 
@@ -138,7 +146,7 @@ async function main() {
         .command('version')
         .description('Display version information')
         .action(async () => {
-            console.log("ExeUp Version: 0.0.2");
+            console.log("ExeUp Version: 0.0.4");
         });
 
     program

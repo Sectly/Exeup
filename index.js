@@ -1,7 +1,7 @@
 // @Package: Exeup
 // @License: MIT
 // @Author: Sectly
-// @Version: 0.0.2
+// @Version: 0.0.4
 // @Source: https://github.com/Sectly/Exeup
 
 const fs = require('fs').promises;
@@ -13,6 +13,7 @@ const { load } = require('resedit/cjs');
 const { exec } = require('child_process');
 const path = require('path');
 const { promisify } = require('util');
+const crypto = require('crypto');
 
 const execAsync = promisify(exec);
 
@@ -20,6 +21,7 @@ const signtoolPackagePath = require.resolve('signtool');
 
 function getSigntoolPath() {
     const signtoolPath = path.dirname(signtoolPackagePath);
+
     switch (process.arch) {
         case 'ia32':
             return path.join(signtoolPath, 'signtool', 'x86', 'signtool.exe').replace(/\\/g, '/');
@@ -63,6 +65,7 @@ function parseObject(data, reference) {
             }
         }
     }
+
     return data;
 }
 
@@ -72,7 +75,9 @@ async function parseOptions(options) {
         const packageJSON = JSON.parse(await fs.readFile(packageJSONPath, 'utf8'));
 
         parseObject(options, packageJSON);
-    } catch (_err) { }
+    } catch (error) {
+        console.log(`Error Parsing Options: ${error}`)
+    }
 
     return options;
 }
@@ -92,6 +97,17 @@ async function ensurePath(targetPath) {
     }
 }
 
+async function getChecksum(filePath) {
+    try {
+        const fileBuffer = await fs.readFile(filePath);
+        const hash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+        return String(hash).toUpperCase();
+    } catch (error) {
+        throw new Error(`Error reading file: ${error.message}`);
+    }
+}
+
 async function exeup(options, progressCallback) {
     progressCallback({
         message: "Initializing...",
@@ -100,7 +116,7 @@ async function exeup(options, progressCallback) {
     });
 
     if (process.platform !== "win32") {
-        throw new Error(`Unsupported platform, Exeup requires the Windows platform (win32) ${process.platform === "linux" && "You may use something like appimagetool to turn the .exe into an .AppImage or use the Wine compatibility layer!" || ""}`);
+        throw new Error(`Unsupported platform, Exeup requires the Windows platform (win32) ${process.platform === "linux" ? "You may use something like appimagetool to turn the .exe into an .AppImage or use the Wine compatibility layer!" : ""}`);
     }
 
     const opts = await parseOptions(options);
@@ -244,11 +260,35 @@ async function exeup(options, progressCallback) {
 
     await fs.writeFile(opts.out, Buffer.from(executable.generate()));
 
+    let metadata = null;
+
+    try {
+        metadata = await fs.stat(opts.out);
+    } catch (error) {
+        throw new Error(`Error getting file metadata: ${error.message}`);
+    }
+
+    progressCallback({
+        message: "Generating checksum...",
+        progress: 95,
+        done: false,
+    });
+
+    const checksum = await getChecksum(opts.out);
+
+    await fs.writeFile(`${opts.out}.checksum`, checksum);
+
     progressCallback({
         message: "Complete!",
         progress: 100,
         done: true,
     });
+
+    return {
+        out: opts.out || null,
+        checksum: checksum || null,
+        metadata: metadata || null,
+    }
 }
 
 module.exports = exeup;
