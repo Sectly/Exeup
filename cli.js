@@ -40,7 +40,7 @@ async function promptUser(query) {
 async function promptUserYesNo(query) {
     const userInput = await promptUser(`${query} [Yes(y) / No(n)]`) || 'n';
 
-    if (String(userInput).toLocaleLowerCase().includes("y")) {
+    if (String(userInput).toLowerCase().includes("y")) {
         return true;
     }
 
